@@ -9,7 +9,7 @@ import pickle
 ## filter out 1 week of travel journals
 
 result_dict = {}
-query = "SELECT * FROM `travel_journal` WHERE travelStartTime >= '2022-03-01T05:20:00Z' AND travelStartTime <= '2022-03-06T12:20:00Z'and purpose = 'Recreation (Social Gathering)'"
+query = "SELECT * FROM `travel_journal` WHERE travelStartTime >= '2022-03-01T05:20:00Z' AND travelStartTime <= '2022-03-06T12:20:00Z'and participantId = 947"
 data = db_query(query)
 
 print('found nr of rows: ', len(data))
@@ -28,5 +28,5 @@ for index, row in data.iterrows():
     print('completed ', index, ' of ', len(data)) 
 
 # Store the result_dict in a pickle file
-with open("result_dict.pickle", "wb") as file:
+with open("947_journeys.pickle", "wb") as file:
     pickle.dump(result_dict, file)

@@ -86,7 +86,7 @@ colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e3
 
 
 # Initialize the subplot function with 2 rows and 2 columns
-fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(10, 8))
+fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(10, 10))
 
 # Remove the unused subplot
 

@@ -30,6 +30,7 @@ df_apartments_locations['longitude'], df_apartments_locations['latitude'] = zip(
 kmeans = KMeans(n_clusters=8, random_state=0).fit(df_apartments_locations[['latitude', 'longitude']])
 df_apartments_locations['region'] = kmeans.labels_
 
+
 ## Elbow graph
 # ssd = []
 # for k in range(1, 16):
@@ -47,11 +48,93 @@ df_apartments_locations['region'] = kmeans.labels_
 # Create a dictionary to map integer values to colors
 color_map = {0: 'red', 1: 'green', 2: 'blue', 3: 'orange', 4: 'purple', 5: 'yellow', 6: 'cyan', 7: 'magenta'}
 
+track_connections = {
+  "0" : {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0
 
+  },
+  "1" : {
+          "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0
+  },
+    "2" : {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "7": 0
+    },
+    "3" : {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "7": 0
+    },
+    "4" : {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "7": 0
+    },
+    "5" : {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "7": 0
+    },
+    "6" : {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "7": 0
+    },
+    "7" : {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "7": 0
+    }
+}
 
 def plot_social_node(df,map):
-    contacts_outside_region = 0
-    contacts_inside_region = 0
+    contacts_outside_region = np.zeros(8).astype(int)
+    contacts_inside_region = np.zeros(8).astype(int)
     for _, row in df_filtered_interactions.iterrows():
         participant_id_from = row['participantIdFrom']
         apartment_id_from = df_participants_apartments.loc[df_participants_apartments['participantId'] == participant_id_from, 'apartmentId']
@@ -70,12 +153,13 @@ def plot_social_node(df,map):
         apartment_region_to = df_apartments_locations.loc[df_apartments_locations['apartmentId'] == apartment_id_to.iloc[0], 'region']
 
         if apartment_region_from.iloc[0] == apartment_region_to.iloc[0]:
-            contacts_inside_region += 1
+            contacts_inside_region[apartment_region_from.iloc[0]] += 1
             edge_color = color_map[apartment_region_from.iloc[0]]
         else:
-            contacts_outside_region += 1
+            contacts_outside_region[apartment_region_from.iloc[0]] += 1
             edge_color = 'gray'
          # Create a line between the coordinates
+        track_connections[str(apartment_region_from.iloc[0])][str(apartment_region_to.iloc[0])] += 1
         line = plt.Line2D([apartment_location_from_lat, apartment_location_to_lat], [apartment_location_from_long, apartment_location_to_long], color=edge_color, alpha=0.03)
         map.add_line(line)
         cirle = plt.Circle((apartment_location_from_lat, apartment_location_from_long), 20, color=color_map[apartment_region_from.iloc[0]], alpha=1.0)
@@ -83,11 +167,51 @@ def plot_social_node(df,map):
     return contacts_inside_region, contacts_outside_region
 
 
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
+fig, (ax, ax1) = plt.subplots(nrows=2, ncols=1, figsize=(10, 10))
 ax = print_city_map(ax)
+ax.set_title('Social interactions between participants')
+# Get the cluster centroids
+cluster_centroids = kmeans.cluster_centers_
+
+# Print the cluster centroid coordinates
+for i, centroid in enumerate(cluster_centroids):
+    print(f"Cluster {i+1} centroid: Latitude {centroid[0]}, Longitude {centroid[1]}")
+    ax.text(centroid[0], centroid[1], i, fontsize=16, color='black', alpha=0.8)
+
+
 contacts_inside_region, contacts_outside_region = plot_social_node(df_apartments_locations, ax)
-print("Contacts inside region: ", contacts_inside_region)
-print("Contacts outside region: ", contacts_outside_region)
-print("Outside region percentage: ", contacts_outside_region/(contacts_inside_region+contacts_outside_region)*100, "%")
-print("Inside region percentage: ", contacts_inside_region/(contacts_inside_region+contacts_outside_region)*100, "%")
+
+# Calculate the x-axis positions for the bars
+x = np.arange(len(contacts_inside_region))
+
+# Create the stacked bar chart
+bar1 = ax1.bar(x, contacts_inside_region, label='Contacts inside region', color=[color_map[i] for i in range(len(contacts_inside_region))], alpha=0.5)
+bar2 = ax1.bar(x, contacts_outside_region, bottom=contacts_inside_region, label='Contacts outside region', color='gray', alpha=0.5)
+
+# Add labels and title
+ax1.set_xlabel('Region')
+ax1.set_ylabel('Number of contacts')
+ax1.set_title('Number of contacts inside and outside the region')
+
+# Add text inside the bars
+for i, bar in enumerate(bar1):
+    percentage = round(contacts_inside_region[i] / (contacts_inside_region[i] + contacts_outside_region[i]) * 100, 2)
+    formatted_percentage = str(percentage) + '%'
+    height = bar.get_height()
+    ax1.text(bar.get_x() + bar.get_width() / 2, height / 2, formatted_percentage, ha='center', va='center', color='white')
+
+for i, bar in enumerate(bar2):
+    percentage = round(contacts_outside_region[i] / (contacts_inside_region[i] + contacts_outside_region[i]) * 100, 2)
+    formatted_percentage = str(percentage) + '%'
+    height = bar.get_height()
+    ax1.text(bar.get_x() + bar.get_width() / 2, bar.get_y() + height / 2, formatted_percentage, ha='center', va='center', color='black')
+
+
+for region, occurrences in track_connections.items():
+    max_occurrences = max(occurrences.values())
+    max_region = max(occurrences, key=occurrences.get)
+    total_occurrences = sum(occurrences.values())
+    percentage = (max_occurrences / total_occurrences) * 100
+    print(f"Region {region} has the most visits to Region {max_region} with {percentage:.2f}%")
+ax1.legend()
 plt.show()

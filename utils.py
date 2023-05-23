@@ -12,7 +12,7 @@ def extract_coords(point_str):
         longitude = float(match.group(1))
         return latitude, longitude
     else:
-        return None
+        return None, None
 
 
 def print_city_map(ax):
