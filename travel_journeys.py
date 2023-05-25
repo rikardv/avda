@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pickle
 from math import radians, cos, sin, asin, sqrt
-
-flag = 10
+from filter_travel_journal import generate_pickled_travel_journal
 
 # Get the 'RdYlGn' colormap
 cmap = plt.cm.get_cmap('cool')
@@ -47,7 +46,6 @@ def plot_travel_journeys(df, map, max_distance, min_distance, normalized_distanc
     # Store the coordinates of the previous location
     prev_lat = None
     prev_long = None
-    global flag
     
     for index, row in df.iterrows():
         lat = row['latitude']
@@ -82,22 +80,32 @@ def plot_travel_journeys(df, map, max_distance, min_distance, normalized_distanc
     # map.add_patch(circle)
 
 
+purpose_dict = {
+    "Purpose1": "Coming Back From Restaurant",
+    "Purpose2": "Eating",
+    "Purpose3": "Going Back to Home",
+    "Purpose4": "Recreation (Social Gathering)",
+    "Purpose5": "Work/Home Commute"
+}
 
+purpose = "Purpose3"
 
-# Social gatherings
-# with open("recreation_journeys.pickle", "rb") as f:
-#     result_dict = pickle.load(f)
-#     title = 'Travel journeys to social gatherings for 1 week period'
-
-# Work/home commute
-# with open("commute_journeys.pickle", "rb") as f:
-#     result_dict = pickle.load(f)
-#     title = 'Travel journeys to work/home for 1 week period'
-
-# Eating
-with open("eating_journeys.pickle", "rb") as f:
-    result_dict = pickle.load(f)
-    title = 'Travel journeys to eating locations for 1 week period'
+max_retries = 2
+retry_count = 0
+while retry_count < max_retries:
+    try:
+        with open(f"{purpose}_journeys.pickle", "rb") as f:
+            result_dict = pickle.load(f)
+            title = 'Travel journeys to eating locations for 1 week period'
+        break
+    except FileNotFoundError:
+        if retry_count < max_retries - 1:
+            print('File not found - generating new file')
+            generate_pickled_travel_journal(False, purpose_dict[purpose], purpose)
+            retry_count += 1
+        else:
+            print(f'Failed to open file {purpose}.pickle after {max_retries} retries')
+            exit()
 
 fig, (ax3, ax4) = plt.subplots( nrows=1, ncols=2,figsize=(20, 8))
 ax3 = print_city_map(ax3)

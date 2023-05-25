@@ -5,6 +5,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pickle
 from math import radians, cos, sin, asin, sqrt
+from filter_travel_journal import generate_pickled_travel_journal
+
+
+'''
+    Select participants 
+'''
+participant_a = 34
+participant_b = 922
 
 def plot_at_work_locations(df, color, ax):
     global plotted_coordinates
@@ -56,14 +64,41 @@ def plot_travel_journeys(df, map, color):
         prev_lat = lat
         prev_long = long
 
-# Participant 537
-with open('537_journeys.pickle', 'rb') as f:
-    result_dict_537 = pickle.load(f)
 
-# Participant 947
-with open('947_journeys.pickle', 'rb') as f:
-    result_dict_947 = pickle.load(f)
+max_retries = 2
+retry_count = 0
 
+while retry_count < max_retries:
+    try:
+        with open(f'{participant_a}_journeys.pickle', 'rb') as f:
+            result_dict_a = pickle.load(f)
+        break  # File opened successfully, exit the loop
+    except FileNotFoundError:
+        if retry_count < max_retries - 1:
+            print(f'Pickled file not found - generating new one for participant {participant_a}')
+            generate_pickled_travel_journal(participant_a)
+            retry_count += 1
+        else:
+            print(f'Failed to open pickled file after {max_retries} attempts. Aborting.')
+            exit()
+            # Handle the failure, raise an exception or exit the program
+
+retry_count = 0  # Reset the retry count for participant B
+
+while retry_count < max_retries:
+    try:
+        with open(f'{participant_b}_journeys.pickle', 'rb') as f:
+            result_dict_b = pickle.load(f)
+        break  # File opened successfully, exit the loop
+    except FileNotFoundError:
+        if retry_count < max_retries - 1:
+            print(f'Pickled file not found - generating new one for participant {participant_b}')
+            generate_pickled_travel_journal(participant_b)
+            retry_count += 1
+        else:
+            print(f'Failed to open pickled file after {max_retries} attempts. Aborting.')
+            exit()
+            # Handle the failure, raise an exception or exit the program
 
 # Get the participants apartment ids
 df_participants_data = pd.read_csv('./csv/participant_data.csv')
@@ -77,17 +112,17 @@ df_buildins_locations = pd.read_csv('./csv/Buildings.csv')
 df_apartments_locations['longitude'], df_apartments_locations['latitude'] = zip(*df_apartments_locations['location'].apply(extract_coords))
 df_buildins_locations['longitude'], df_buildins_locations['latitude'] = zip(*df_buildins_locations['location'].apply(extract_coords))
 
-apartment_id_537 = df_participants_data.loc[df_participants_data['participantId'] == 537, 'apartmentId']
-apartment_id_947 = df_participants_data.loc[df_participants_data['participantId'] == 947, 'apartmentId']
+apartment_id_a = df_participants_data.loc[df_participants_data['participantId'] == participant_a, 'apartmentId']
+apartment_id_b = df_participants_data.loc[df_participants_data['participantId'] == participant_b, 'apartmentId']
 
 
-apartment_location_537_lat = df_apartments_locations.loc[df_apartments_locations['apartmentId'] == apartment_id_537.iloc[0], 'latitude']
-apartment_location_537_long = df_apartments_locations.loc[df_apartments_locations['apartmentId'] == apartment_id_537.iloc[0], 'longitude']
+apartment_location_a_lat = df_apartments_locations.loc[df_apartments_locations['apartmentId'] == apartment_id_a.iloc[0], 'latitude']
+apartment_location_a_long = df_apartments_locations.loc[df_apartments_locations['apartmentId'] == apartment_id_a.iloc[0], 'longitude']
 
-apartment_location_947_lat = df_apartments_locations.loc[df_apartments_locations['apartmentId'] == apartment_id_947.iloc[0], 'latitude']
-apartment_location_947_long = df_apartments_locations.loc[df_apartments_locations['apartmentId'] == apartment_id_947.iloc[0], 'longitude']
+apartment_location_b_lat = df_apartments_locations.loc[df_apartments_locations['apartmentId'] == apartment_id_b.iloc[0], 'latitude']
+apartment_location_b_long = df_apartments_locations.loc[df_apartments_locations['apartmentId'] == apartment_id_b.iloc[0], 'longitude']
 
-title = 'Participant 537 (red) and 947 (blue) travel journeys'
+title = f'Participant {participant_a} (red) and {participant_b} (blue) travel journeys'
 
 fig, (ax3) = plt.subplots( figsize=(15, 8))
 ax3 = print_city_map(ax3)
@@ -96,7 +131,7 @@ ax3.set_title(title)
 plotted_coordinates = set()
 
 # Access the data in the result_dict
-for hash_id, stamps in result_dict_537.items():
+for hash_id, stamps in result_dict_a.items():
     # Perform operations on the stamps data
     stamps['longitude'], stamps['latitude'] = zip(*stamps['currentLocation'].apply(extract_coords))
     color = 'red'
@@ -105,7 +140,7 @@ for hash_id, stamps in result_dict_537.items():
 
 
 # Access the data in the result_dict
-for hash_id, stamps in result_dict_947.items():
+for hash_id, stamps in result_dict_b.items():
     # Perform operations on the stamps data
     stamps['longitude'], stamps['latitude'] = zip(*stamps['currentLocation'].apply(extract_coords))
     color = 'blue'

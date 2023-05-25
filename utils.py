@@ -52,3 +52,19 @@ def print_city_map(ax):
     ax.set_title('test')
 
     return ax
+
+def calculate_distance(row, df_apartments_locations):
+    apartment_id_from = row['apartmentIdFrom']
+    apartment_id_to = row['apartmentIdTo']
+
+    apartment_location_from = df_apartments_locations.loc[df_apartments_locations['apartmentId'] == apartment_id_from]
+    apartment_location_to = df_apartments_locations.loc[df_apartments_locations['apartmentId'] == apartment_id_to]
+
+    lat_from = apartment_location_from['latitude'].values[0]
+    long_from = apartment_location_from['longitude'].values[0]
+    lat_to = apartment_location_to['latitude'].values[0]
+    long_to = apartment_location_to['longitude'].values[0]
+
+    manhattan_distance = abs(lat_to - lat_from) + abs(long_to - long_from)
+
+    return manhattan_distance

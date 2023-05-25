@@ -36,6 +36,9 @@ def plot_stacked_histogram(ax, df):
 
     df_pivot.plot(kind='bar', stacked=True, color=colors, ax=ax, alpha=0.5)
 
+    ax.set_xticklabels(['00:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00']
+)
+
     # set the x-axis label
     ax.set_xlabel('Time of day')
 
@@ -79,7 +82,7 @@ df['datetime'] = pd.to_datetime(df['hour'])
 df['day_of_week'] = df['datetime'].dt.dayofweek
 
 # Extract the time of day (morning = 0, afternoon = 1, evening = 2, night = 3)
-df['time_of_day'] = pd.cut(df['datetime'].dt.hour, bins=[0, 6, 12, 18, 24], labels=False, include_lowest=True)
+df['time_of_day'] = pd.cut(df['datetime'].dt.hour, bins=list(range(25)), labels=False, include_lowest=True)
 
 colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf', '#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e', '#a6761d']
 
